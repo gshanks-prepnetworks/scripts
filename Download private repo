@@ -1,0 +1,34 @@
+﻿$credentials="(access token)" #github private access token for the repo you are downloading from
+$repo = "(repo name)"                 #should be self explanatory
+$directory = "C:\temp\"                                 #Directory where the new folder will be created
+$folder = "(folder name)"                                    #New folder that will be created
+$file = "(file name)"                 #Full file path and name of the downloaded file
+
+###DO NOT EDIT VARIABLES BELOW HERE###
+
+
+
+$headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+$headers.Add("Authorization", "token $credentials")
+
+# Construct the URL to fetch the latest release information
+$releaseUrl = "https://api.github.com/repos/$repo/releases/latest"
+
+# Fetch the latest release information from GitHub API
+$releaseInfo = Invoke-RestMethod -Headers $headers -Uri $releaseUrl 
+$downloadurl = $releaseinfo.assets.url
+
+# Break the URL down to retrieve the asset number to inject it into the $asset variable
+$urlParts = $downloadurl.Split('/')
+$asset = $urlparts[-1]
+
+# Completed download url
+$CompleteURL = "https://" + $credentials + ":@api.github.com/repos/$repo/releases/assets/$asset"
+Write-Host $CompleteURL
+
+# Create the directory to save to
+New-Item -Path $directory -Name $folder -ItemType "directory" -Force
+
+# Append required headers to $headers variable and start downloading the file
+$headers.Add("Accept", "application/octet-stream")
+Invoke-WebRequest -Uri $CompleteURL -Headers $headers -OutFile $file
